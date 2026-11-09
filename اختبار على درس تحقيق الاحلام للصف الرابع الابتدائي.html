@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اختبار الأحلام</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Baloo 2', 'Comic Sans MS', 'Trebuchet MS', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #ff6b6b 0%, #feca57 45%, #48dbfb 75%, #ff9ff3 100%);
+  background-size: 300% 300%;
+  animation: bgshift 12s ease infinite;
+  min-height: 100vh; padding: 20px; color: #2d2d2d;
+}
+@keyframes bgshift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+.container { max-width: 700px; margin: 0 auto; }
+.header { text-align: center; color: #fff; padding: 26px 20px; }
+.header h1 { font-size: 30px; font-weight: 800; margin-bottom: 6px; text-shadow: 0 3px 0 rgba(0,0,0,0.15); }
+.header .meta { font-size: 14px; opacity: 0.95; font-weight: 600; }
+.progress-bar { background: rgba(255,255,255,0.35); border-radius: 20px; height: 12px; margin: 18px 0; overflow: hidden; border: 2px solid rgba(255,255,255,0.5); }
+.progress-fill { background: #fff; height: 100%; width: 0%; transition: width 0.4s ease; border-radius: 20px; }
+.question { background: #fff; border-radius: 24px; padding: 28px; box-shadow: 0 14px 0 rgba(0,0,0,0.12); display: none; border: 4px solid #2d2d2d; position: relative; overflow: hidden; }
+.question.active { display: block; }
+.q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 13px; }
+.q-number { font-weight: 800; color: #ff6b6b; background: #fff0f0; padding: 6px 12px; border-radius: 20px; }
+.streak { font-weight: 800; color: #e67e22; }
+.streak:empty { display: none; }
+.q-text { font-size: 19px; font-weight: 700; line-height: 1.5; margin-bottom: 22px; color: #222; }
+.options { display: flex; flex-direction: column; gap: 12px; }
+.option-wrapper { display: flex; flex-direction: column; }
+.option {
+  display: flex; align-items: center; gap: 12px; padding: 16px 18px;
+  border: 3px solid #2d2d2d; border-radius: 18px; background: #fffdf5;
+  cursor: pointer; transition: transform 0.12s, background 0.2s; text-align: left; font-size: 15px; font-weight: 600; width: 100%;
+  box-shadow: 0 4px 0 #2d2d2d;
+}
+[dir="rtl"] .option { text-align: right; flex-direction: row-reverse; }
+.option:hover:not(.disabled) { transform: translateY(-2px); background: #fff7e0; }
+.option:active:not(.disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #2d2d2d; }
+.option.selected { background: #eef2ff; }
+.option.correct { border-color: #22c55e; background: #dcfce7; }
+.option.incorrect { border-color: #ef4444; background: #fee2e2; }
+.option.disabled { cursor: default; }
+.option.show-correct { border-color: #22c55e; background: #dcfce7; }
+.opt-emoji { font-size: 20px; flex-shrink: 0; }
+.opt-text { line-height: 1.5; }
+
+.option-feedback { margin: 6px 0 4px 4px; padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.5; border: 2px dashed transparent; }
+.option-feedback.correct-feedback { background: #dcfce7; border-color: #22c55e; }
+.option-feedback.incorrect-feedback { background: #fef3f2; border-color: #fca5a5; }
+.feedback-status { font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.feedback-status.correct { color: #166534; }
+.feedback-status.incorrect { color: #991b1b; }
+.feedback-rationale { color: #444; }
+
+.hint-box { margin: 12px 0; border-radius: 16px; overflow: hidden; background: #fffbeb; border: 2px solid #fcd34d; }
+.hint-toggle { width: 100%; padding: 10px 16px; background: transparent; border: none; cursor: pointer; font-size: 14px; font-weight: 700; color: #92400e; text-align: left; display: flex; align-items: center; gap: 8px; }
+.hint-toggle:hover { background: #fef3c7; }
+.hint-content { padding: 0 16px; max-height: 0; overflow: hidden; transition: max-height 0.3s, padding 0.3s; font-size: 14px; color: #78350f; line-height: 1.5; }
+.hint-box.show .hint-content { padding: 0 16px 12px; max-height: 200px; }
+
+.next-btn {
+  margin-top: 20px; width: 100%; padding: 15px;
+  background: #ff6b6b; color: #fff; border: 3px solid #2d2d2d;
+  border-radius: 18px; font-size: 16px; font-weight: 800; cursor: pointer;
+  box-shadow: 0 5px 0 #2d2d2d; transition: transform 0.12s;
+}
+.next-btn:hover { transform: translateY(-2px); }
+.next-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #2d2d2d; }
+.hidden { display: none !important; }
+
+.results { background: #fff; border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 14px 0 rgba(0,0,0,0.12); border: 4px solid #2d2d2d; display: none; }
+.results.active { display: block; }
+.results h2 { font-size: 30px; margin-bottom: 6px; color: #333; font-weight: 800; }
+.stars { font-size: 40px; margin: 14px 0; letter-spacing: 4px; }
+.results .score { font-size: 60px; font-weight: 800; color: #ff6b6b; margin: 10px 0; }
+.results .score-text { font-size: 17px; color: #666; margin-bottom: 26px; font-weight: 600; }
+.restart-btn {
+  padding: 15px 40px; background: #48dbfb; color: #103a45; border: 3px solid #2d2d2d;
+  border-radius: 18px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 5px 0 #2d2d2d;
+}
+.restart-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #2d2d2d; }
+
+.confetti-piece { position: fixed; top: -10px; width: 8px; height: 14px; opacity: 0.9; pointer-events: none; z-index: 999; animation: fall linear forwards; }
+@keyframes fall { to { transform: translateY(110vh) rotate(540deg); opacity: 0.3; } }
+
+.math, .math-block { font-family: "Cambria Math", "Times New Roman", Times, serif; font-style: italic; }
+.math-block { display: block; text-align: center; margin: 10px 0; font-size: 110%; }
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 3px; font-size: 0.9em; }
+.frac-num { border-bottom: 1px solid currentColor; padding: 0 4px 2px; line-height: 1.2; }
+.frac-den { padding: 2px 4px 0; line-height: 1.2; }
+.sqrt { white-space: nowrap; }
+.sqrt-content { border-top: 1px solid currentColor; padding: 0 3px; margin-left: 2px; }
+sup, sub { font-size: 0.75em; }
+sup { vertical-align: super; }
+sub { vertical-align: sub; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🎉 اختبار الأحلام</h1>
+    <div class="meta">26 questions</div>
+    <div class="progress-bar"><div class="progress-fill"></div></div>
+  </div>
+  <div id="quiz-container">
+        <div class="question" data-index="0">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 1 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">ما المقصود بالحلم كما ورد في بداية النص؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في الحلم كهدف يسعى إليه الإنسان في مستقبله.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="الحلم في سياق النص يمثل الرؤية أو الطموح الذي يسعى الفرد للوصول إليه في المستقبل.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">فكرة كبيرة يريد الإنسان أن يحققها يوماً ما.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الحلم في سياق النص يمثل الرؤية أو الطموح الذي يسعى الفرد للوصول إليه في المستقبل.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="هذا هو المعنى العامي للحلم، لكن النص يتحدث عن أهداف مستقبلية يسعى المرء لتحقيقها.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">مجرد تخيلات يراها الإنسان أثناء نومه.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">هذا هو المعنى العامي للحلم، لكن النص يتحدث عن أهداف مستقبلية يسعى المرء لتحقيقها.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="الأعمال اليومية هي خطوات، بينما الحلم هو الفكرة الكبيرة والنهائية.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">عمل بسيط نقوم به كل يوم.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الأعمال اليومية هي خطوات، بينما الحلم هو الفكرة الكبيرة والنهائية.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="الحلم هنا ليس للتسلية بل هو هدف جاد يتطلب تخطيطاً وعملاً.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">قصة خيالية يرويها الأصدقاء لبعضهم.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الحلم هنا ليس للتسلية بل هو هدف جاد يتطلب تخطيطاً وعملاً.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="1">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 2 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">ما هي الخطوة الأولى والأساسية لتحقيق الأحلام؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر فيما يجب فعله قبل البدء بأي عمل فعلي.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="تحديد الهدف هو الأساس الذي تبنى عليه كافة الخطوات والخطط اللاحقة.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">تحديد الحلم بشكل واضح ودقيق.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">تحديد الهدف هو الأساس الذي تبنى عليه كافة الخطوات والخطط اللاحقة.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="العمل العشوائي قد يؤدي للتشتت، بينما الوضوح هو المفتاح الأول.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">البدء بالعمل دون تفكير مسبق.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">العمل العشوائي قد يؤدي للتشتت، بينما الوضوح هو المفتاح الأول.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="التحدث عن الحلم جميل، لكن الخطوة الأولى هي التحديد الدقيق لما نريد.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">الجلوس مع الأصدقاء للتحدث عن الحلم.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">التحدث عن الحلم جميل، لكن الخطوة الأولى هي التحديد الدقيق لما نريد.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="الأحلام لا تتحقق بالانتظار بل بالسعي والعمل الجاد.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">انتظار الفرصة المناسبة لتأتي إلينا.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الأحلام لا تتحقق بالانتظار بل بالسعي والعمل الجاد.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="2">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 3 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">لماذا يعد تحديد الحلم بوضوح أمراً مهماً؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في كيفية تأثير الوضوح على عملية التخطيط والتركيز.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="الوضوح يساعد في تركيز الجهود وتسهيل عملية التخطيط السليم.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">لأنه يجعل الحلم أسهل في التحقيق ويمنع التشتت.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الوضوح يساعد في تركيز الجهود وتسهيل عملية التخطيط السليم.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="التحديد يسهل الطريق لكنه لا يلغي ضرورة العمل والاجتهاد.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">لأنه يجعل الحلم يتحقق تلقائياً دون تعب.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">التحديد يسهل الطريق لكنه لا يلغي ضرورة العمل والاجتهاد.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="الصعوبات ستظل موجودة، لكن الوضوح يمنحنا القدرة على تجاوزها.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">لأنه يساعدنا على نسيان الصعوبات.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الصعوبات ستظل موجودة، لكن الوضوح يمنحنا القدرة على تجاوزها.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="الشهرة قد تكون نتيجة، لكن الفائدة الأساسية للتحديد هي التنظيم والتركيز.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">لأنه يجعلنا مشهورين بين الناس فوراً.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الشهرة قد تكون نتيجة، لكن الفائدة الأساسية للتحديد هي التنظيم والتركيز.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="3">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 4 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">كيف يجب أن نتعامل مع الصعوبات التي تواجهنا في طريق حلمنا؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في أهمية الصبر والمثابرة عند مواجهة التحديات.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="الاستسلام عند أول عقبة يمنع تحقيق أي نجاح حقيقي.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">يجب أن نتوقف ونغير الحلم فوراً.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الاستسلام عند أول عقبة يمنع تحقيق أي نجاح حقيقي.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="اليأس يعيق التقدم، بينما العمل والاجتهاد هما الحل.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">يجب أن نشعر بالحزن واليأس.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">اليأس يعيق التقدم، بينما العمل والاجتهاد هما الحل.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="المثابرة وطلب الدعم هما الوسيلتان الفعالتان لتجاوز العقبات.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">يجب ألا نستسلم ونعمل بجد ونطلب المساعدة.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">المثابرة وطلب الدعم هما الوسيلتان الفعالتان لتجاوز العقبات.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="الصعوبات تتطلب مواجهة وعملاً، والانتظار قد يضيع الوقت.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">يجب أن ننتظر حتى تختفي الصعوبات وحدها.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الصعوبات تتطلب مواجهة وعملاً، والانتظار قد يضيع الوقت.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="4">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 5 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">ما الفائدة التي نحصل عليها من طلب المساعدة من الكبار والخبراء؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في القيمة العلمية والعملية التي يمتلكها ذوو الخبرة.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="المساعدة المقصودة في النص هي المعنوية والتعليمية وليست المادية.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">الحصول على جوائز مالية منهم.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">المساعدة المقصودة في النص هي المعنوية والتعليمية وليست المادية.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="طلب المساعدة يهدف للتطوير وليس للمفاخرة أو الخوف من الآخرين.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">لكي يعرفوا أحلامنا ويحسدونا عليها.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">طلب المساعدة يهدف للتطوير وليس للمفاخرة أو الخوف من الآخرين.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="الخبراء يمتلكون تجارب سابقة يمكن أن تختصر علينا طريق التعلم.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">الاستفادة من آرائهم وخبراتهم السابقة.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الخبراء يمتلكون تجارب سابقة يمكن أن تختصر علينا طريق التعلم.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="الهدف ليس التهرب من العمل، بل الاستفادة من معرفة الآخرين.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">توفير الوقت بتركهم يقومون بالعمل بدلاً منا.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الهدف ليس التهرب من العمل، بل الاستفادة من معرفة الآخرين.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="5">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 6 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">أي من العبارات التالية تعبر عن نصيحة الكاتب في نهاية النص؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">ابحث عن الخطوة العملية التي تربط بين التفكير والتنفيذ.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="النص ينفي بوضوح أن الأحلام تتحقق دون عمل وجهد.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">الأحلام تتحقق بالجلوس والانتظار الطويل.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">النص ينفي بوضوح أن الأحلام تتحقق دون عمل وجهد.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="النص يهدف لزرع الأمل وبيان كيفية تحقيق الأحلام لا التنفير منها.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">الحلم فكرة مستحيلة لا يمكن تحقيقها.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">النص يهدف لزرع الأمل وبيان كيفية تحقيق الأحلام لا التنفير منها.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="الجمع بين التخطيط والمبادرة هو السبيل الفعلي للنجاح.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">ضعوا خطة لتحقيق حلمكم وابدأوا فوراً.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الجمع بين التخطيط والمبادرة هو السبيل الفعلي للنجاح.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="النص يشجع على طلب المساعدة لمواجهة الصعوبات بذكاء.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">تجاهلوا الصعوبات ولا تطلبوا المساعدة من أحد.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">النص يشجع على طلب المساعدة لمواجهة الصعوبات بذكاء.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="6">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 7 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">ما معنى كلمة (لديه) في جملة (كل واحد منا لديه شيء)؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في كلمة تعني الامتلاك أو الحيازة.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="الكلمة تدل على حيازة الشيء أو وجوده عند الشخص وليس القرب المكاني.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">بجوارـه</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الكلمة تدل على حيازة الشيء أو وجوده عند الشخص وليس القرب المكاني.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="كلمة (عنده) هي المرادف الدقيق لـ (لديه) للتعبير عن الحيازة أو الوجود.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">عنده</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">كلمة (عنده) هي المرادف الدقيق لـ (لديه) للتعبير عن الحيازة أو الوجود.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="المكانية لا تعبر عن الملكية المقصودة في السياق.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">أمامـه</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">المكانية لا تعبر عن الملكية المقصودة في السياق.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="الخلف تعبر عن جهة مكانية ولا تعطي معنى الامتلاك.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">خلفـه</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الخلف تعبر عن جهة مكانية ولا تعطي معنى الامتلاك.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="7">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 8 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">ما مضاد كلمة (واضح) في النص؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">ابحث عن كلمة تعني شيئاً مستتراً أو غير ظاهر.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="الصغير يتعلق بالحجم، ومضاده الكبير.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">صغير</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الصغير يتعلق بالحجم، ومضاده الكبير.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="البعيد مضاد للقريب، وليس له علاقة بالوضوح.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">بعيد</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">البعيد مضاد للقريب، وليس له علاقة بالوضوح.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="المنسي يتعلق بالذاكرة، وعكسه المتذكر أو المعروف.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">منسي</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">المنسي يتعلق بالذاكرة، وعكسه المتذكر أو المعروف.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="الشيء الخفي هو المستتر الذي لا يمكن رؤيته، وهو عكس الواضح الظاهر.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">خفي</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الشيء الخفي هو المستتر الذي لا يمكن رؤيته، وهو عكس الواضح الظاهر.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="8">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 9 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">ما هو جمع كلمة (فكرة)؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">ارجع إلى جدول (المفرد وجمعه) في المصدر المرفق.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="تفكير هو مصدر للفعل (فكّر) وليس جمعاً.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">تفكير</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">تفكير هو مصدر للفعل (فكّر) وليس جمعاً.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="أفكار هي جمع تكسير لـ (فكرة)، لكن الجدول ذكر (فِكر).">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">أفكار</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">أفكار هي جمع تكسير لـ (فكرة)، لكن الجدول ذكر (فِكر).</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="مفكرون هو جمع مذكر سالم لاسم الفاعل (مفكر) وليس للفكرة.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">مفكرون</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">مفكرون هو جمع مذكر سالم لاسم الفاعل (مفكر) وليس للفكرة.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="هذا هو الجمع الوارد في جداول المفردات الملحقة بالنص.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">فِكَر</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">هذا هو الجمع الوارد في جداول المفردات الملحقة بالنص.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="9">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 10 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">ما مرادف كلمة (نواجه) في عبارة (نواجه صعوبات في الطريق)؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في كلمة تعني التقابل مع العقبات وجهاً لوجه.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="الخوف شعور، لكن المواجهة فعل يدل على التصدي أو اللقاء.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">نخاف</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الخوف شعور، لكن المواجهة فعل يدل على التصدي أو اللقاء.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="التجاهل يعني عدم الاكتراث، بينما المواجهة تعني التعامل مع الأمر.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">نتجاهل</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">التجاهل يعني عدم الاكتراث، بينما المواجهة تعني التعامل مع الأمر.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="الهروب هو عكس المواجهة تماماً.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">نهرب</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الهروب هو عكس المواجهة تماماً.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="المواجهة تعني مقابلة الشيء أو التصدي له وجهاً لوجه.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">نقابل</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">المواجهة تعني مقابلة الشيء أو التصدي له وجهاً لوجه.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="10">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 11 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">ما مفرد كلمة (صعوبات)؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">ابحث عن الكلمة المفردة التي تدل على مشكلة واحدة.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="مصاعب هي جمع تكسير آخر لنفس المعنى، وليست مفرداً.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">مصاعب</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">مصاعب هي جمع تكسير آخر لنفس المعنى، وليست مفرداً.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="صعاب هي أيضاً صيغة جمع تكسير وليست مفرداً.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">صعاب</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">صعاب هي أيضاً صيغة جمع تكسير وليست مفرداً.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="صعب هي صفة، بينما صعوبات هي جمع لاسم.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">صعب</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">صعب هي صفة، بينما صعوبات هي جمع لاسم.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="صعوبة هي المفرد المؤنث الصحيح لجمع (صعوبات).">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">صعوبة</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">صعوبة هي المفرد المؤنث الصحيح لجمع (صعوبات).</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="11">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 12 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">تعد كلمة (أحمق) مضاداً لكلمة:</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">ابحث عن صفة تدل على الذكاء الشديد والقدرة العقلية الفائقة.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="المبدع والعبقري قريبان في المعنى، لكن الجدول حدد العبقري كضاد للأحمق.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">مبدع</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">المبدع والعبقري قريبان في المعنى، لكن الجدول حدد العبقري كضاد للأحمق.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="مضاد ماهر هو فاشل أو غير متقن.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">ماهر</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">مضاد ماهر هو فاشل أو غير متقن.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="مضاد مشهور هو مغمور.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">مشهور</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">مضاد مشهور هو مغمور.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="العبقري هو شديد الذكاء، والأحمق هو قليل العقل والتدبير.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">عبقري</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">العبقري هو شديد الذكاء، والأحمق هو قليل العقل والتدبير.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="12">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 13 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">ماذا يحدث إذا لم نقم بوضع خطة لتحقيق أحلامنا؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في أهمية التنظيم وتأثير غيابه على المجهود.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="الصعوبات واقعية ولا ترتبط بوجود خطة من عدمها، بل الخطة تساعد على تجاوزها.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">تختفي كل الصعوبات من طريقنا.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الصعوبات واقعية ولا ترتبط بوجود خطة من عدمها، بل الخطة تساعد على تجاوزها.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="المساعدة تأتي غالباً لمن يظهر الجدية والالتزام بخطة معينة.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">سوف يساعدنا الجميع دون طلب ذلك.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">المساعدة تأتي غالباً لمن يظهر الجدية والالتزام بخطة معينة.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="عدم التخطيط يؤدي عادة للتأخير أو الفشل وليس السرعة.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">سوف تتحقق الأحلام بسرعة أكبر.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">عدم التخطيط يؤدي عادة للتأخير أو الفشل وليس السرعة.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="الخطة تنظم العمل وتمنع ضياع المجهود في أمور غير مجدية.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">قد نتعرض للتشتت ونضيع وقتنا دون فائدة.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الخطة تنظم العمل وتمنع ضياع المجهود في أمور غير مجدية.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="13">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 14 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">متى تبدأ الخطوة الأولى نحو تحقيق الحلم؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في اللحظة التي يتحول فيها الخيال إلى هدف محدد.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="البداية الحقيقية تنبع من المعرفة الدقيقة للهدف المنشود.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">عندما نحدد ما نريده بوضوح.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">البداية الحقيقية تنبع من المعرفة الدقيقة للهدف المنشود.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="المال وسيلة، لكن البداية تكون فكرة وتحديداً للهدف.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">عندما نحصل على الكثير من المال.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">المال وسيلة، لكن البداية تكون فكرة وتحديداً للهدف.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="تحقيق الحلم يبدأ من الآن بخطوات صغيرة ولا يشترط الانتظار للمستقبل.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">عندما نكبر وننهي دراستنا.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">تحقيق الحلم يبدأ من الآن بخطوات صغيرة ولا يشترط الانتظار للمستقبل.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="الحلم ينبع من رغبة الشخص نفسه وليس من أوامر الآخرين.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">عندما يطلب منا الآخرون ذلك.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الحلم ينبع من رغبة الشخص نفسه وليس من أوامر الآخرين.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="14">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 15 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">أي من المهن التالية ذُكرت كأمثلة للأحلام في النص؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">راجع الفقرة الأولى من الدرس لمعرفة الأمثلة المذكورة.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="النص ركز على نماذج أخرى مثل الطبيب والمهندس والفنان والرياضي.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">محامٍ أو معلم.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">النص ركز على نماذج أخرى مثل الطبيب والمهندس والفنان والرياضي.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="لم يذكر النص هذه المهن تحديداً كأمثلة.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">رائد فضاء أو طيار.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">لم يذكر النص هذه المهن تحديداً كأمثلة.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="هذه مهن شريفة لكنها لم ترد في النص كأمثلة للأحلام.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">مزارع أو تاجر.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">هذه مهن شريفة لكنها لم ترد في النص كأمثلة للأحلام.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="وردت هذه النماذج في الفقرة الأولى كأمثلة لطموحات الأطفال.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">طبيب ماهر أو مهندس عبقري.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">وردت هذه النماذج في الفقرة الأولى كأمثلة لطموحات الأطفال.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="15">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 16 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">ما معنى كلمة (تستسلم) في سياق مواجهة الصعوبات؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في كلمة تعني التخلي عن الهدف أمام العقبات.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="المقاومة هي عكس الاستسلام.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">تقاوم وتستمر.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">المقاومة هي عكس الاستسلام.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="الاستسلام يعني الانهزام أمام العقبة وترك السعي لتحقيق الهدف.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">تخضع وتتوقف عن المحاولة.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الاستسلام يعني الانهزام أمام العقبة وترك السعي لتحقيق الهدف.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="طلب المساعدة دليل على الرغبة في الاستمرار وليس الاستسلام.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">تطلب المساعدة فوراً.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">طلب المساعدة دليل على الرغبة في الاستمرار وليس الاستسلام.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="تغيير الخطة قد يكون خطوة إيجابية للنجاح وليس استسلاماً.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">تغير خطتك بذكاء.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">تغيير الخطة قد يكون خطوة إيجابية للنجاح وليس استسلاماً.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="16">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 17 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">مضاد كلمة (الاجتهاد) هو:</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في الصفة التي تمنع الإنسان من العمل وبذل الجهد.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="الحزن شعور عاطفي ومضاده الفرح.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">الحزن</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الحزن شعور عاطفي ومضاده الفرح.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="true" data-rationale="الاجتهاد هو بذل الوسع والنشاط، وعكسه التراخي وعدم العمل وهو الكسل.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">الكسل</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الاجتهاد هو بذل الوسع والنشاط، وعكسه التراخي وعدم العمل وهو الكسل.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="التعب قد يكون نتيجة للاجتهاد، لكنه ليس مضاداً له.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">التعب</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">التعب قد يكون نتيجة للاجتهاد، لكنه ليس مضاداً له.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="الذكاء موهبة، ومضاده الغباء، وكلاهما يحتاج للاجتهاد ليثمر.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">الذكاء</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الذكاء موهبة، ومضاده الغباء، وكلاهما يحتاج للاجتهاد ليثمر.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="17">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 18 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">ما مفرد كلمة (أبطالاً)؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">ابحث عن الصيغة المفردة التي تصف الشخص الشجاع أو المتميز.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="بطلة هي المفرد المؤنث، وجمعها بطلات.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">بطلة</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">بطلة هي المفرد المؤنث، وجمعها بطلات.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="باطل كلمة مختلفة تماماً في المعنى.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">باطل</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">باطل كلمة مختلفة تماماً في المعنى.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="بطولة هي المصدر أو اسم الحدث.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">بطولة</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">بطولة هي المصدر أو اسم الحدث.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="بطل هو المفرد المذكر لكلمة أبطال.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">بطل</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">بطل هو المفرد المذكر لكلمة أبطال.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="18">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 19 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">وفقاً للنص، الأحلام لا تتحقق بـ:</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">ابحث عن السلوك السلبي الذي لا يؤدي إلى أي نتيجة.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="العمل الشاق هو أساس تحقيق الأحلام.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">العمل الشاق.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">العمل الشاق هو أساس تحقيق الأحلام.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="التخطيط جزء لا يتجزأ من رحلة النجاح.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">وضع خطة محكمة.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">التخطيط جزء لا يتجزأ من رحلة النجاح.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="الأحلام تتطلب حركة وسعياً، والخمول لا يحقق الأهداف.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">الجلوس والانتظار.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الأحلام تتطلب حركة وسعياً، والخمول لا يحقق الأهداف.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="الاستعانة بالخبراء وسيلة فعالة للوصول للحلم.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">الاستعانة بالخبراء.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الاستعانة بالخبراء وسيلة فعالة للوصول للحلم.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="19">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 20 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">ما المقصود بكلمة (عبقرياً)؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في مستوى عالٍ جداً من القدرة الذهنية.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="الشهرة قد تأتي للعبقري، لكنها ليست تعريفاً له.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">مشهوراً جداً.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الشهرة قد تأتي للعبقري، لكنها ليست تعريفاً له.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="الغنى صفة مادية لا علاقة لها بالذكاء الفطري.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">كثير المال.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الغنى صفة مادية لا علاقة لها بالذكاء الفطري.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="العبقرية هي التميز العقلي والذكاء الاستثنائي.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">شديد الذكاء.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">العبقرية هي التميز العقلي والذكاء الاستثنائي.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="القوة البدنية صفة للرياضي وليس بالضرورة للعبقري.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">قوياً بدنياً.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">القوة البدنية صفة للرياضي وليس بالضرورة للعبقري.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="20">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 21 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">عبارة (الحلم يبدأ عندما نعرف ماذا نريد) تدل على أهمية:</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في ضرورة إدراك الغاية قبل بدء الوسيلة.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="معرفة ما نريد هي الخطوة الجوهرية للبدء في الطريق الصحيح.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">الوعي بالهدف.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">معرفة ما نريد هي الخطوة الجوهرية للبدء في الطريق الصحيح.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="السرعة دون معرفة الهدف قد تؤدي للخطأ.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">السرعة في العمل.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">السرعة دون معرفة الهدف قد تؤدي للخطأ.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="لم يركز النص على المال كبداية للحلم.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">جمع المال.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">لم يركز النص على المال كبداية للحلم.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="الحلم يجب أن يكون نابعاً من رغبة ذاتية واعية.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">تقليد الآخرين.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الحلم يجب أن يكون نابعاً من رغبة ذاتية واعية.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="21">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 22 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">أي الكلمات التالية هي جمع (مهارة)؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">ابحث عن صيغة الجمع التي تنتهي بألف وتاء مبسوطة.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="مواهب هي جمع (موهبة)، وهي قريبة في المعنى لكنها ليست جمعاً لمهارة.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">مواهب</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">مواهب هي جمع (موهبة)، وهي قريبة في المعنى لكنها ليست جمعاً لمهارة.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="كلمة غير مستخدمة كجمع لمهارة.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">مُهّار</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">كلمة غير مستخدمة كجمع لمهارة.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="ماهرون جمع لاسم الفاعل (ماهر).">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">ماهرون</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">ماهرون جمع لاسم الفاعل (ماهر).</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="مهارات هي جمع المؤنث السالم الصحيح لكلمة (مهارة).">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">مهارات</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">مهارات هي جمع المؤنث السالم الصحيح لكلمة (مهارة).</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="22">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 23 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">ماذا تعني كلمة (ماهرًا) في جملة (تصبح طبيبًا ماهرًا)؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في كلمة تصف الإتقان الشديد في العمل.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="true" data-rationale="المهارة تعني الإتقان والبراعة في أداء العمل.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">بارعًا</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">المهارة تعني الإتقان والبراعة في أداء العمل.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="القبول الاجتماعي صفة إضافية لا تعني بالضرورة المهارة المهنية.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">محبوبًا</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">القبول الاجتماعي صفة إضافية لا تعني بالضرورة المهارة المهنية.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="النشاط مهم لكن المهارة تتعلق بالجودة والإتقان.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">نشيطًا</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">النشاط مهم لكن المهارة تتعلق بالجودة والإتقان.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="السن لا يحدد المهارة، بل التدريب والتعلم.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">صغيرًا</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">السن لا يحدد المهارة، بل التدريب والتعلم.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="23">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 24 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">مضاد كلمة (تجهلون) هو:</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في الكلمة التي تعني إدراك الشيء والعلم به.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="النسيان هو فقدان المعلومة، وعكسه التذكر.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">تنسون</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">النسيان هو فقدان المعلومة، وعكسه التذكر.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="الحب شعور قلبي وعكسه الكراهية.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">تحبون</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الحب شعور قلبي وعكسه الكراهية.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="السمع حاسة، بينما الجهل والمعرفة يتعلقان بالعقل.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">تسمعون</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">السمع حاسة، بينما الجهل والمعرفة يتعلقان بالعقل.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="الجهل هو عدم المعرفة، لذا فإن ضده هو العلم والمعرفة.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">تعرفون</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الجهل هو عدم المعرفة، لذا فإن ضده هو العلم والمعرفة.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="24">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 25 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">من هو الشخص الذي نطلب منه النصيحة والخبرة وفقاً للنص؟</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في الفئة التي تمتلك معرفة وتجارب حياتية سابقة.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="الأصدقاء في مثل سننا قد يشاركوننا الحلم لكنهم يفتقرون للخبرة الواسعة.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">الأصدقاء الصغار فقط.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الأصدقاء في مثل سننا قد يشاركوننا الحلم لكنهم يفتقرون للخبرة الواسعة.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="النصيحة يجب أن تطلب من أهل العلم والخبرة لضمان صحتها.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">الغرباء في الشارع.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">النصيحة يجب أن تطلب من أهل العلم والخبرة لضمان صحتها.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="true" data-rationale="تجاربهم الطويلة تجعلهم مصدراً موثوقاً للإرشاد والنصح.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">أصحاب الخبرات والكبار.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">تجاربهم الطويلة تجعلهم مصدراً موثوقاً للإرشاد والنصح.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="false" data-rationale="هذا يتعارض مع توجيهات النص التي تحث على طلب المساعدة عند الحاجة.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">لا نطلب المساعدة من أحد.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">هذا يتعارض مع توجيهات النص التي تحث على طلب المساعدة عند الحاجة.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      
+        <div class="question" data-index="25">
+          <div class="q-header">
+            <span class="q-number">🎯 Question 26 / 26</span>
+            <span class="streak" id="streak-badge"></span>
+          </div>
+          <div class="q-text">عبارة (بذلت جهداً إضافياً) تعني أنك:</div>
+          
+        <div class="hint-box">
+          <button class="hint-toggle" onclick="this.parentElement.classList.toggle('show')">
+            💡 Hint
+          </button>
+          <div class="hint-content">فكر في الزيادة في العمل والنشاط للوصول للنجاح.</div>
+        </div>
+      
+          <div class="options">
+        <div class="option-wrapper">
+          <button class="option" data-label="A" data-correct="false" data-rationale="هذا تقصير وليس جهداً إضافياً.">
+            <span class="opt-emoji">🅰️</span>
+            <span class="opt-text">فعلت أقل مما هو مطلوب.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="A">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">هذا تقصير وليس جهداً إضافياً.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="B" data-correct="false" data-rationale="عدم التغيير يعني البقاء في منطقة الراحة لا بذل الجهد.">
+            <span class="opt-emoji">🅱️</span>
+            <span class="opt-text">لم تفعل شيئاً جديداً.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="B">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">عدم التغيير يعني البقاء في منطقة الراحة لا بذل الجهد.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="C" data-correct="false" data-rationale="الجهد الإضافي يجب أن ينبع من الشخص نفسه.">
+            <span class="opt-emoji">🅲️</span>
+            <span class="opt-text">طلبت من الآخرين القيام بعملك.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="C">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الجهد الإضافي يجب أن ينبع من الشخص نفسه.</div>
+          </div>
+        </div>
+      
+        <div class="option-wrapper">
+          <button class="option" data-label="D" data-correct="true" data-rationale="الجهد الإضافي هو زيادة في السعي والعمل لتجاوز الصعاب.">
+            <span class="opt-emoji">🅳️</span>
+            <span class="opt-text">فعلت أكثر من المعتاد لتحقيق هدفك.</span>
+          </button>
+          <div class="option-feedback hidden" data-for="D">
+            <div class="feedback-status"></div>
+            <div class="feedback-rationale">الجهد الإضافي هو زيادة في السعي والعمل لتجاوز الصعاب.</div>
+          </div>
+        </div>
+      </div>
+          <button class="next-btn hidden">Next Question →</button>
+        </div>
+      </div>
+  <div class="results" id="results">
+    <h2>Quiz Complete!</h2>
+    <div class="stars" id="stars"></div>
+    <div class="score" id="score">0%</div>
+    <div class="score-text" id="score-text"></div>
+    <button class="restart-btn" onclick="restart()">🔁 Try Again</button>
+  </div>
+</div>
+<script>
+const quizData = [{"question":"ما المقصود بالحلم كما ورد في بداية النص؟","hint":"فكر في الحلم كهدف يسعى إليه الإنسان في مستقبله.","options":[{"label":"A","text":"فكرة كبيرة يريد الإنسان أن يحققها يوماً ما.","isCorrect":true,"rationale":"الحلم في سياق النص يمثل الرؤية أو الطموح الذي يسعى الفرد للوصول إليه في المستقبل."},{"label":"B","text":"مجرد تخيلات يراها الإنسان أثناء نومه.","isCorrect":false,"rationale":"هذا هو المعنى العامي للحلم، لكن النص يتحدث عن أهداف مستقبلية يسعى المرء لتحقيقها."},{"label":"C","text":"عمل بسيط نقوم به كل يوم.","isCorrect":false,"rationale":"الأعمال اليومية هي خطوات، بينما الحلم هو الفكرة الكبيرة والنهائية."},{"label":"D","text":"قصة خيالية يرويها الأصدقاء لبعضهم.","isCorrect":false,"rationale":"الحلم هنا ليس للتسلية بل هو هدف جاد يتطلب تخطيطاً وعملاً."}]},{"question":"ما هي الخطوة الأولى والأساسية لتحقيق الأحلام؟","hint":"فكر فيما يجب فعله قبل البدء بأي عمل فعلي.","options":[{"label":"A","text":"تحديد الحلم بشكل واضح ودقيق.","isCorrect":true,"rationale":"تحديد الهدف هو الأساس الذي تبنى عليه كافة الخطوات والخطط اللاحقة."},{"label":"B","text":"البدء بالعمل دون تفكير مسبق.","isCorrect":false,"rationale":"العمل العشوائي قد يؤدي للتشتت، بينما الوضوح هو المفتاح الأول."},{"label":"C","text":"الجلوس مع الأصدقاء للتحدث عن الحلم.","isCorrect":false,"rationale":"التحدث عن الحلم جميل، لكن الخطوة الأولى هي التحديد الدقيق لما نريد."},{"label":"D","text":"انتظار الفرصة المناسبة لتأتي إلينا.","isCorrect":false,"rationale":"الأحلام لا تتحقق بالانتظار بل بالسعي والعمل الجاد."}]},{"question":"لماذا يعد تحديد الحلم بوضوح أمراً مهماً؟","hint":"فكر في كيفية تأثير الوضوح على عملية التخطيط والتركيز.","options":[{"label":"A","text":"لأنه يجعل الحلم أسهل في التحقيق ويمنع التشتت.","isCorrect":true,"rationale":"الوضوح يساعد في تركيز الجهود وتسهيل عملية التخطيط السليم."},{"label":"B","text":"لأنه يجعل الحلم يتحقق تلقائياً دون تعب.","isCorrect":false,"rationale":"التحديد يسهل الطريق لكنه لا يلغي ضرورة العمل والاجتهاد."},{"label":"C","text":"لأنه يساعدنا على نسيان الصعوبات.","isCorrect":false,"rationale":"الصعوبات ستظل موجودة، لكن الوضوح يمنحنا القدرة على تجاوزها."},{"label":"D","text":"لأنه يجعلنا مشهورين بين الناس فوراً.","isCorrect":false,"rationale":"الشهرة قد تكون نتيجة، لكن الفائدة الأساسية للتحديد هي التنظيم والتركيز."}]},{"question":"كيف يجب أن نتعامل مع الصعوبات التي تواجهنا في طريق حلمنا؟","hint":"فكر في أهمية الصبر والمثابرة عند مواجهة التحديات.","options":[{"label":"A","text":"يجب أن نتوقف ونغير الحلم فوراً.","isCorrect":false,"rationale":"الاستسلام عند أول عقبة يمنع تحقيق أي نجاح حقيقي."},{"label":"B","text":"يجب أن نشعر بالحزن واليأس.","isCorrect":false,"rationale":"اليأس يعيق التقدم، بينما العمل والاجتهاد هما الحل."},{"label":"C","text":"يجب ألا نستسلم ونعمل بجد ونطلب المساعدة.","isCorrect":true,"rationale":"المثابرة وطلب الدعم هما الوسيلتان الفعالتان لتجاوز العقبات."},{"label":"D","text":"يجب أن ننتظر حتى تختفي الصعوبات وحدها.","isCorrect":false,"rationale":"الصعوبات تتطلب مواجهة وعملاً، والانتظار قد يضيع الوقت."}]},{"question":"ما الفائدة التي نحصل عليها من طلب المساعدة من الكبار والخبراء؟","hint":"فكر في القيمة العلمية والعملية التي يمتلكها ذوو الخبرة.","options":[{"label":"A","text":"الحصول على جوائز مالية منهم.","isCorrect":false,"rationale":"المساعدة المقصودة في النص هي المعنوية والتعليمية وليست المادية."},{"label":"B","text":"لكي يعرفوا أحلامنا ويحسدونا عليها.","isCorrect":false,"rationale":"طلب المساعدة يهدف للتطوير وليس للمفاخرة أو الخوف من الآخرين."},{"label":"C","text":"الاستفادة من آرائهم وخبراتهم السابقة.","isCorrect":true,"rationale":"الخبراء يمتلكون تجارب سابقة يمكن أن تختصر علينا طريق التعلم."},{"label":"D","text":"توفير الوقت بتركهم يقومون بالعمل بدلاً منا.","isCorrect":false,"rationale":"الهدف ليس التهرب من العمل، بل الاستفادة من معرفة الآخرين."}]},{"question":"أي من العبارات التالية تعبر عن نصيحة الكاتب في نهاية النص؟","hint":"ابحث عن الخطوة العملية التي تربط بين التفكير والتنفيذ.","options":[{"label":"A","text":"الأحلام تتحقق بالجلوس والانتظار الطويل.","isCorrect":false,"rationale":"النص ينفي بوضوح أن الأحلام تتحقق دون عمل وجهد."},{"label":"B","text":"الحلم فكرة مستحيلة لا يمكن تحقيقها.","isCorrect":false,"rationale":"النص يهدف لزرع الأمل وبيان كيفية تحقيق الأحلام لا التنفير منها."},{"label":"C","text":"ضعوا خطة لتحقيق حلمكم وابدأوا فوراً.","isCorrect":true,"rationale":"الجمع بين التخطيط والمبادرة هو السبيل الفعلي للنجاح."},{"label":"D","text":"تجاهلوا الصعوبات ولا تطلبوا المساعدة من أحد.","isCorrect":false,"rationale":"النص يشجع على طلب المساعدة لمواجهة الصعوبات بذكاء."}]},{"question":"ما معنى كلمة (لديه) في جملة (كل واحد منا لديه شيء)؟","hint":"فكر في كلمة تعني الامتلاك أو الحيازة.","options":[{"label":"A","text":"بجوارـه","isCorrect":false,"rationale":"الكلمة تدل على حيازة الشيء أو وجوده عند الشخص وليس القرب المكاني."},{"label":"B","text":"عنده","isCorrect":true,"rationale":"كلمة (عنده) هي المرادف الدقيق لـ (لديه) للتعبير عن الحيازة أو الوجود."},{"label":"C","text":"أمامـه","isCorrect":false,"rationale":"المكانية لا تعبر عن الملكية المقصودة في السياق."},{"label":"D","text":"خلفـه","isCorrect":false,"rationale":"الخلف تعبر عن جهة مكانية ولا تعطي معنى الامتلاك."}]},{"question":"ما مضاد كلمة (واضح) في النص؟","hint":"ابحث عن كلمة تعني شيئاً مستتراً أو غير ظاهر.","options":[{"label":"A","text":"صغير","isCorrect":false,"rationale":"الصغير يتعلق بالحجم، ومضاده الكبير."},{"label":"B","text":"بعيد","isCorrect":false,"rationale":"البعيد مضاد للقريب، وليس له علاقة بالوضوح."},{"label":"C","text":"منسي","isCorrect":false,"rationale":"المنسي يتعلق بالذاكرة، وعكسه المتذكر أو المعروف."},{"label":"D","text":"خفي","isCorrect":true,"rationale":"الشيء الخفي هو المستتر الذي لا يمكن رؤيته، وهو عكس الواضح الظاهر."}]},{"question":"ما هو جمع كلمة (فكرة)؟","hint":"ارجع إلى جدول (المفرد وجمعه) في المصدر المرفق.","options":[{"label":"A","text":"تفكير","isCorrect":false,"rationale":"تفكير هو مصدر للفعل (فكّر) وليس جمعاً."},{"label":"B","text":"أفكار","isCorrect":false,"rationale":"أفكار هي جمع تكسير لـ (فكرة)، لكن الجدول ذكر (فِكر)."},{"label":"C","text":"مفكرون","isCorrect":false,"rationale":"مفكرون هو جمع مذكر سالم لاسم الفاعل (مفكر) وليس للفكرة."},{"label":"D","text":"فِكَر","isCorrect":true,"rationale":"هذا هو الجمع الوارد في جداول المفردات الملحقة بالنص."}]},{"question":"ما مرادف كلمة (نواجه) في عبارة (نواجه صعوبات في الطريق)؟","hint":"فكر في كلمة تعني التقابل مع العقبات وجهاً لوجه.","options":[{"label":"A","text":"نخاف","isCorrect":false,"rationale":"الخوف شعور، لكن المواجهة فعل يدل على التصدي أو اللقاء."},{"label":"B","text":"نتجاهل","isCorrect":false,"rationale":"التجاهل يعني عدم الاكتراث، بينما المواجهة تعني التعامل مع الأمر."},{"label":"C","text":"نهرب","isCorrect":false,"rationale":"الهروب هو عكس المواجهة تماماً."},{"label":"D","text":"نقابل","isCorrect":true,"rationale":"المواجهة تعني مقابلة الشيء أو التصدي له وجهاً لوجه."}]},{"question":"ما مفرد كلمة (صعوبات)؟","hint":"ابحث عن الكلمة المفردة التي تدل على مشكلة واحدة.","options":[{"label":"A","text":"مصاعب","isCorrect":false,"rationale":"مصاعب هي جمع تكسير آخر لنفس المعنى، وليست مفرداً."},{"label":"B","text":"صعاب","isCorrect":false,"rationale":"صعاب هي أيضاً صيغة جمع تكسير وليست مفرداً."},{"label":"C","text":"صعب","isCorrect":false,"rationale":"صعب هي صفة، بينما صعوبات هي جمع لاسم."},{"label":"D","text":"صعوبة","isCorrect":true,"rationale":"صعوبة هي المفرد المؤنث الصحيح لجمع (صعوبات)."}]},{"question":"تعد كلمة (أحمق) مضاداً لكلمة:","hint":"ابحث عن صفة تدل على الذكاء الشديد والقدرة العقلية الفائقة.","options":[{"label":"A","text":"مبدع","isCorrect":false,"rationale":"المبدع والعبقري قريبان في المعنى، لكن الجدول حدد العبقري كضاد للأحمق."},{"label":"B","text":"ماهر","isCorrect":false,"rationale":"مضاد ماهر هو فاشل أو غير متقن."},{"label":"C","text":"مشهور","isCorrect":false,"rationale":"مضاد مشهور هو مغمور."},{"label":"D","text":"عبقري","isCorrect":true,"rationale":"العبقري هو شديد الذكاء، والأحمق هو قليل العقل والتدبير."}]},{"question":"ماذا يحدث إذا لم نقم بوضع خطة لتحقيق أحلامنا؟","hint":"فكر في أهمية التنظيم وتأثير غيابه على المجهود.","options":[{"label":"A","text":"تختفي كل الصعوبات من طريقنا.","isCorrect":false,"rationale":"الصعوبات واقعية ولا ترتبط بوجود خطة من عدمها، بل الخطة تساعد على تجاوزها."},{"label":"B","text":"سوف يساعدنا الجميع دون طلب ذلك.","isCorrect":false,"rationale":"المساعدة تأتي غالباً لمن يظهر الجدية والالتزام بخطة معينة."},{"label":"C","text":"سوف تتحقق الأحلام بسرعة أكبر.","isCorrect":false,"rationale":"عدم التخطيط يؤدي عادة للتأخير أو الفشل وليس السرعة."},{"label":"D","text":"قد نتعرض للتشتت ونضيع وقتنا دون فائدة.","isCorrect":true,"rationale":"الخطة تنظم العمل وتمنع ضياع المجهود في أمور غير مجدية."}]},{"question":"متى تبدأ الخطوة الأولى نحو تحقيق الحلم؟","hint":"فكر في اللحظة التي يتحول فيها الخيال إلى هدف محدد.","options":[{"label":"A","text":"عندما نحدد ما نريده بوضوح.","isCorrect":true,"rationale":"البداية الحقيقية تنبع من المعرفة الدقيقة للهدف المنشود."},{"label":"B","text":"عندما نحصل على الكثير من المال.","isCorrect":false,"rationale":"المال وسيلة، لكن البداية تكون فكرة وتحديداً للهدف."},{"label":"C","text":"عندما نكبر وننهي دراستنا.","isCorrect":false,"rationale":"تحقيق الحلم يبدأ من الآن بخطوات صغيرة ولا يشترط الانتظار للمستقبل."},{"label":"D","text":"عندما يطلب منا الآخرون ذلك.","isCorrect":false,"rationale":"الحلم ينبع من رغبة الشخص نفسه وليس من أوامر الآخرين."}]},{"question":"أي من المهن التالية ذُكرت كأمثلة للأحلام في النص؟","hint":"راجع الفقرة الأولى من الدرس لمعرفة الأمثلة المذكورة.","options":[{"label":"A","text":"محامٍ أو معلم.","isCorrect":false,"rationale":"النص ركز على نماذج أخرى مثل الطبيب والمهندس والفنان والرياضي."},{"label":"B","text":"رائد فضاء أو طيار.","isCorrect":false,"rationale":"لم يذكر النص هذه المهن تحديداً كأمثلة."},{"label":"C","text":"مزارع أو تاجر.","isCorrect":false,"rationale":"هذه مهن شريفة لكنها لم ترد في النص كأمثلة للأحلام."},{"label":"D","text":"طبيب ماهر أو مهندس عبقري.","isCorrect":true,"rationale":"وردت هذه النماذج في الفقرة الأولى كأمثلة لطموحات الأطفال."}]},{"question":"ما معنى كلمة (تستسلم) في سياق مواجهة الصعوبات؟","hint":"فكر في كلمة تعني التخلي عن الهدف أمام العقبات.","options":[{"label":"A","text":"تقاوم وتستمر.","isCorrect":false,"rationale":"المقاومة هي عكس الاستسلام."},{"label":"B","text":"تخضع وتتوقف عن المحاولة.","isCorrect":true,"rationale":"الاستسلام يعني الانهزام أمام العقبة وترك السعي لتحقيق الهدف."},{"label":"C","text":"تطلب المساعدة فوراً.","isCorrect":false,"rationale":"طلب المساعدة دليل على الرغبة في الاستمرار وليس الاستسلام."},{"label":"D","text":"تغير خطتك بذكاء.","isCorrect":false,"rationale":"تغيير الخطة قد يكون خطوة إيجابية للنجاح وليس استسلاماً."}]},{"question":"مضاد كلمة (الاجتهاد) هو:","hint":"فكر في الصفة التي تمنع الإنسان من العمل وبذل الجهد.","options":[{"label":"A","text":"الحزن","isCorrect":false,"rationale":"الحزن شعور عاطفي ومضاده الفرح."},{"label":"B","text":"الكسل","isCorrect":true,"rationale":"الاجتهاد هو بذل الوسع والنشاط، وعكسه التراخي وعدم العمل وهو الكسل."},{"label":"C","text":"التعب","isCorrect":false,"rationale":"التعب قد يكون نتيجة للاجتهاد، لكنه ليس مضاداً له."},{"label":"D","text":"الذكاء","isCorrect":false,"rationale":"الذكاء موهبة، ومضاده الغباء، وكلاهما يحتاج للاجتهاد ليثمر."}]},{"question":"ما مفرد كلمة (أبطالاً)؟","hint":"ابحث عن الصيغة المفردة التي تصف الشخص الشجاع أو المتميز.","options":[{"label":"A","text":"بطلة","isCorrect":false,"rationale":"بطلة هي المفرد المؤنث، وجمعها بطلات."},{"label":"B","text":"باطل","isCorrect":false,"rationale":"باطل كلمة مختلفة تماماً في المعنى."},{"label":"C","text":"بطولة","isCorrect":false,"rationale":"بطولة هي المصدر أو اسم الحدث."},{"label":"D","text":"بطل","isCorrect":true,"rationale":"بطل هو المفرد المذكر لكلمة أبطال."}]},{"question":"وفقاً للنص، الأحلام لا تتحقق بـ:","hint":"ابحث عن السلوك السلبي الذي لا يؤدي إلى أي نتيجة.","options":[{"label":"A","text":"العمل الشاق.","isCorrect":false,"rationale":"العمل الشاق هو أساس تحقيق الأحلام."},{"label":"B","text":"وضع خطة محكمة.","isCorrect":false,"rationale":"التخطيط جزء لا يتجزأ من رحلة النجاح."},{"label":"C","text":"الجلوس والانتظار.","isCorrect":true,"rationale":"الأحلام تتطلب حركة وسعياً، والخمول لا يحقق الأهداف."},{"label":"D","text":"الاستعانة بالخبراء.","isCorrect":false,"rationale":"الاستعانة بالخبراء وسيلة فعالة للوصول للحلم."}]},{"question":"ما المقصود بكلمة (عبقرياً)؟","hint":"فكر في مستوى عالٍ جداً من القدرة الذهنية.","options":[{"label":"A","text":"مشهوراً جداً.","isCorrect":false,"rationale":"الشهرة قد تأتي للعبقري، لكنها ليست تعريفاً له."},{"label":"B","text":"كثير المال.","isCorrect":false,"rationale":"الغنى صفة مادية لا علاقة لها بالذكاء الفطري."},{"label":"C","text":"شديد الذكاء.","isCorrect":true,"rationale":"العبقرية هي التميز العقلي والذكاء الاستثنائي."},{"label":"D","text":"قوياً بدنياً.","isCorrect":false,"rationale":"القوة البدنية صفة للرياضي وليس بالضرورة للعبقري."}]},{"question":"عبارة (الحلم يبدأ عندما نعرف ماذا نريد) تدل على أهمية:","hint":"فكر في ضرورة إدراك الغاية قبل بدء الوسيلة.","options":[{"label":"A","text":"الوعي بالهدف.","isCorrect":true,"rationale":"معرفة ما نريد هي الخطوة الجوهرية للبدء في الطريق الصحيح."},{"label":"B","text":"السرعة في العمل.","isCorrect":false,"rationale":"السرعة دون معرفة الهدف قد تؤدي للخطأ."},{"label":"C","text":"جمع المال.","isCorrect":false,"rationale":"لم يركز النص على المال كبداية للحلم."},{"label":"D","text":"تقليد الآخرين.","isCorrect":false,"rationale":"الحلم يجب أن يكون نابعاً من رغبة ذاتية واعية."}]},{"question":"أي الكلمات التالية هي جمع (مهارة)؟","hint":"ابحث عن صيغة الجمع التي تنتهي بألف وتاء مبسوطة.","options":[{"label":"A","text":"مواهب","isCorrect":false,"rationale":"مواهب هي جمع (موهبة)، وهي قريبة في المعنى لكنها ليست جمعاً لمهارة."},{"label":"B","text":"مُهّار","isCorrect":false,"rationale":"كلمة غير مستخدمة كجمع لمهارة."},{"label":"C","text":"ماهرون","isCorrect":false,"rationale":"ماهرون جمع لاسم الفاعل (ماهر)."},{"label":"D","text":"مهارات","isCorrect":true,"rationale":"مهارات هي جمع المؤنث السالم الصحيح لكلمة (مهارة)."}]},{"question":"ماذا تعني كلمة (ماهرًا) في جملة (تصبح طبيبًا ماهرًا)؟","hint":"فكر في كلمة تصف الإتقان الشديد في العمل.","options":[{"label":"A","text":"بارعًا","isCorrect":true,"rationale":"المهارة تعني الإتقان والبراعة في أداء العمل."},{"label":"B","text":"محبوبًا","isCorrect":false,"rationale":"القبول الاجتماعي صفة إضافية لا تعني بالضرورة المهارة المهنية."},{"label":"C","text":"نشيطًا","isCorrect":false,"rationale":"النشاط مهم لكن المهارة تتعلق بالجودة والإتقان."},{"label":"D","text":"صغيرًا","isCorrect":false,"rationale":"السن لا يحدد المهارة، بل التدريب والتعلم."}]},{"question":"مضاد كلمة (تجهلون) هو:","hint":"فكر في الكلمة التي تعني إدراك الشيء والعلم به.","options":[{"label":"A","text":"تنسون","isCorrect":false,"rationale":"النسيان هو فقدان المعلومة، وعكسه التذكر."},{"label":"B","text":"تحبون","isCorrect":false,"rationale":"الحب شعور قلبي وعكسه الكراهية."},{"label":"C","text":"تسمعون","isCorrect":false,"rationale":"السمع حاسة، بينما الجهل والمعرفة يتعلقان بالعقل."},{"label":"D","text":"تعرفون","isCorrect":true,"rationale":"الجهل هو عدم المعرفة، لذا فإن ضده هو العلم والمعرفة."}]},{"question":"من هو الشخص الذي نطلب منه النصيحة والخبرة وفقاً للنص؟","hint":"فكر في الفئة التي تمتلك معرفة وتجارب حياتية سابقة.","options":[{"label":"A","text":"الأصدقاء الصغار فقط.","isCorrect":false,"rationale":"الأصدقاء في مثل سننا قد يشاركوننا الحلم لكنهم يفتقرون للخبرة الواسعة."},{"label":"B","text":"الغرباء في الشارع.","isCorrect":false,"rationale":"النصيحة يجب أن تطلب من أهل العلم والخبرة لضمان صحتها."},{"label":"C","text":"أصحاب الخبرات والكبار.","isCorrect":true,"rationale":"تجاربهم الطويلة تجعلهم مصدراً موثوقاً للإرشاد والنصح."},{"label":"D","text":"لا نطلب المساعدة من أحد.","isCorrect":false,"rationale":"هذا يتعارض مع توجيهات النص التي تحث على طلب المساعدة عند الحاجة."}]},{"question":"عبارة (بذلت جهداً إضافياً) تعني أنك:","hint":"فكر في الزيادة في العمل والنشاط للوصول للنجاح.","options":[{"label":"A","text":"فعلت أقل مما هو مطلوب.","isCorrect":false,"rationale":"هذا تقصير وليس جهداً إضافياً."},{"label":"B","text":"لم تفعل شيئاً جديداً.","isCorrect":false,"rationale":"عدم التغيير يعني البقاء في منطقة الراحة لا بذل الجهد."},{"label":"C","text":"طلبت من الآخرين القيام بعملك.","isCorrect":false,"rationale":"الجهد الإضافي يجب أن ينبع من الشخص نفسه."},{"label":"D","text":"فعلت أكثر من المعتاد لتحقيق هدفك.","isCorrect":true,"rationale":"الجهد الإضافي هو زيادة في السعي والعمل لتجاوز الصعاب."}]}];
+const tr = {"correct":"Correct!","incorrect":"Incorrect","next":"Next Question →","seeResults":"See Results","complete":"Quiz Complete!","scoreText":"You got {correct} out of {total} correct","tryAgain":"Try Again","rightAnswer":"Right answer","notQuite":"Not quite"};
+let currentQ = 0, correctCount = 0, streak = 0, answered = false;
+const CONFETTI_COLORS = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#1dd1a1'];
+
+function init() {
+  document.querySelectorAll('.question').forEach((q, i) => q.classList.toggle('active', i === 0));
+  updateProgress();
+  updateStreakBadge();
+  document.querySelectorAll('.option').forEach(opt => opt.addEventListener('click', () => selectOption(opt)));
+  document.querySelectorAll('.next-btn').forEach(btn => btn.addEventListener('click', nextQuestion));
+}
+
+function updateStreakBadge() {
+  const badge = document.getElementById('streak-badge');
+  if (!badge) return;
+  badge.textContent = streak >= 2 ? ('🔥 ' + streak) : '';
+}
+
+function burstConfetti() {
+  for (let i = 0; i < 24; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+    piece.style.animationDuration = (1.6 + Math.random() * 1.2) + 's';
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 3000);
+  }
+}
+
+function selectOption(opt) {
+  if (answered) return;
+  answered = true;
+  const q = opt.closest('.question');
+  const options = q.querySelectorAll('.option');
+  const nextBtn = q.querySelector('.next-btn');
+  const isCorrect = opt.dataset.correct === 'true';
+
+  options.forEach(o => o.classList.add('disabled'));
+  opt.classList.add('selected', isCorrect ? 'correct' : 'incorrect');
+
+  if (!isCorrect) {
+    const correctOpt = [...options].find(o => o.dataset.correct === 'true');
+    if (correctOpt) correctOpt.classList.add('show-correct');
+  }
+
+  if (isCorrect) { correctCount++; streak++; burstConfetti(); } else { streak = 0; }
+  updateStreakBadge();
+
+  options.forEach(o => {
+    const wrapper = o.closest('.option-wrapper');
+    const feedback = wrapper.querySelector('.option-feedback');
+    const rationale = o.dataset.rationale;
+    const isThisCorrect = o.dataset.correct === 'true';
+
+    if (rationale && rationale.trim()) {
+      feedback.classList.remove('hidden');
+      feedback.classList.add(isThisCorrect ? 'correct-feedback' : 'incorrect-feedback');
+      const statusEl = feedback.querySelector('.feedback-status');
+      statusEl.className = 'feedback-status ' + (isThisCorrect ? 'correct' : 'incorrect');
+      statusEl.innerHTML = isThisCorrect ? ('🎉 ' + tr.rightAnswer) : ('😅 ' + tr.notQuite);
+    }
+  });
+
+  nextBtn.classList.remove('hidden');
+  if (currentQ === quizData.length - 1) nextBtn.textContent = '🏁 ' + tr.seeResults;
+}
+
+function nextQuestion() {
+  answered = false;
+  currentQ++;
+  if (currentQ >= quizData.length) { showResults(); return; }
+  document.querySelectorAll('.question').forEach((q, i) => q.classList.toggle('active', i === currentQ));
+  updateProgress();
+  updateStreakBadge();
+}
+
+function updateProgress() {
+  document.querySelector('.progress-fill').style.width = (currentQ / quizData.length * 100) + '%';
+}
+
+function showResults() {
+  document.querySelectorAll('.question').forEach(q => q.classList.remove('active'));
+  document.getElementById('results').classList.add('active');
+  const pct = Math.round((correctCount / quizData.length) * 100);
+  const starCount = Math.max(1, Math.round(pct / 20));
+  document.getElementById('stars').textContent = '⭐'.repeat(starCount) + '☆'.repeat(5 - starCount);
+  document.getElementById('score').textContent = pct + '%';
+  document.getElementById('score-text').textContent = tr.scoreText.replace('{correct}', correctCount).replace('{total}', quizData.length);
+  document.querySelector('.progress-fill').style.width = '100%';
+  if (pct >= 80) burstConfetti();
+}
+
+function restart() {
+  currentQ = 0; correctCount = 0; streak = 0; answered = false;
+  document.getElementById('results').classList.remove('active');
+  document.querySelectorAll('.question').forEach((q, i) => {
+    q.classList.toggle('active', i === 0);
+    q.querySelectorAll('.option').forEach(o => o.classList.remove('selected', 'correct', 'incorrect', 'disabled', 'show-correct'));
+    q.querySelectorAll('.option-feedback').forEach(f => {
+      f.classList.add('hidden');
+      f.classList.remove('correct-feedback', 'incorrect-feedback');
+    });
+    const btn = q.querySelector('.next-btn');
+    btn.classList.add('hidden');
+    btn.textContent = tr.next;
+  });
+  updateProgress();
+  updateStreakBadge();
+}
+
+init();
+</script>
+</body>
+</html>
