@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الألعاب التعليمية</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Cairo',sans-serif;min-height:100vh;background:#0f0c29;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px;overflow-x:hidden}
+
+/* Stars background */
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(2px 2px at 20px 30px,#eee,transparent),radial-gradient(2px 2px at 40px 70px,#fff,transparent),radial-gradient(1px 1px at 90px 40px,#fff,transparent),radial-gradient(2px 2px at 160px 120px,#ddf,transparent),radial-gradient(1px 1px at 230px 60px,#fff,transparent),radial-gradient(2px 2px at 300px 90px,#eef,transparent),radial-gradient(1px 1px at 400px 30px,#fff,transparent),radial-gradient(2px 2px at 500px 150px,#dde,transparent),radial-gradient(1px 1px at 600px 80px,#fff,transparent),radial-gradient(2px 2px at 700px 50px,#eee,transparent),radial-gradient(1px 1px at 800px 120px,#fff,transparent),radial-gradient(2px 2px at 100px 200px,#ddf,transparent),radial-gradient(1px 1px at 250px 250px,#fff,transparent),radial-gradient(2px 2px at 450px 200px,#eef,transparent),radial-gradient(1px 1px at 650px 180px,#fff,transparent);background-size:800px 300px;animation:twinkle 8s infinite alternate;opacity:0.4;pointer-events:none;z-index:0}
+@keyframes twinkle{0%{opacity:0.3}100%{opacity:0.6}}
+
+.content{position:relative;z-index:1;width:100%;max-width:900px;display:flex;flex-direction:column;align-items:center}
+
+.header{text-align:center;margin-bottom:50px}
+.crown{font-size:55px;margin-bottom:12px;animation:bounce 2s infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+h1{color:#fff;font-size:36px;font-weight:900;margin-bottom:8px;text-shadow:0 0 30px rgba(255,255,255,0.3)}
+.subtitle{color:rgba(255,255,255,0.65);font-size:16px;font-weight:400}
+
+.games-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;width:100%}
+
+.game-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.15);border-radius:28px;padding:35px 28px;text-align:center;transition:all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);cursor:pointer;text-decoration:none;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden}
+.game-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);border-radius:28px 28px 0 0}
+.game-card:hover{transform:translateY(-12px) scale(1.02);background:rgba(255,255,255,0.14);box-shadow:0 30px 60px rgba(0,0,0,0.4),0 0 40px var(--glow)}
+
+.card-1{--accent:linear-gradient(90deg,#4f46e5,#06b6d4);--glow:rgba(79,70,229,0.3)}
+.card-2{--accent:linear-gradient(90deg,#f59e0b,#ef4444);--glow:rgba(245,158,11,0.3)}
+
+.game-icon{width:90px;height:90px;border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:42px;margin-bottom:20px;position:relative}
+.icon-1{background:linear-gradient(135deg,#4f46e5,#06b6d4);box-shadow:0 10px 30px rgba(79,70,229,0.4)}
+.icon-2{background:linear-gradient(135deg,#f59e0b,#ef4444);box-shadow:0 10px 30px rgba(245,158,11,0.4)}
+
+.game-name{color:#fff;font-size:20px;font-weight:800;margin-bottom:10px;line-height:1.4}
+.game-desc{color:rgba(255,255,255,0.6);font-size:14px;line-height:1.6;margin-bottom:25px}
+
+.tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:25px}
+.tag{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8)}
+.tag-blue{background:rgba(79,70,229,0.3)}
+.tag-cyan{background:rgba(6,182,212,0.3)}
+.tag-amber{background:rgba(245,158,11,0.3)}
+.tag-red{background:rgba(239,68,68,0.3)}
+
+.play-btn{display:inline-flex;align-items:center;gap:10px;padding:14px 32px;border-radius:16px;font-family:'Cairo',sans-serif;font-size:16px;font-weight:700;color:#fff;border:none;cursor:pointer;transition:all 0.2s;width:100%;justify-content:center}
+.btn-1{background:linear-gradient(135deg,#4f46e5,#06b6d4);box-shadow:0 8px 20px rgba(79,70,229,0.4)}
+.btn-2{background:linear-gradient(135deg,#f59e0b,#ef4444);box-shadow:0 8px 20px rgba(245,158,11,0.4)}
+.play-btn:hover{transform:scale(1.04);filter:brightness(1.1)}
+
+.footer{color:rgba(255,255,255,0.3);font-size:13px;margin-top:45px;text-align:center}
+</style>
+</head>
+<body>
+<div class="content">
+  <div class="header">
+    <div class="crown">🎓</div>
+    <h1>الألعاب التعليمية</h1>
+    <p class="subtitle">اختر اللعبة التي تريد تلعبها</p>
+  </div>
+
+  <div class="games-grid">
+
+    <a class="game-card card-1" href="لعبة على التاء المربوطة والمفتوحة والهاء.html">
+      <div class="game-icon icon-1">🏰</div>
+      <div class="game-name">لعبة برج النهايات</div>
+      <div class="game-desc">تحدى نفسك في التفريق بين التاء المربوطة والمفتوحة والهاء — واصعد البرج سؤالاً سؤالاً!</div>
+      <div class="tags">
+        <span class="tag tag-blue">🔤 إملاء</span>
+        <span class="tag tag-cyan">⏱ مؤقت</span>
+        <span class="tag tag-blue">🏆 تحدي</span>
+      </div>
+      <button class="play-btn btn-1">▶ العب الآن</button>
+    </a>
+
+    <a class="game-card card-2" href="اختبار على درس تحقيق الاحلام للصف الرابع الابتدائي.html">
+      <div class="game-icon icon-2">⭐</div>
+      <div class="game-name">اختبار تحقيق الأحلام</div>
+      <div class="game-desc">اختبار تفاعلي على درس تحقيق الأحلام للصف الرابع الابتدائي — أسئلة ممتعة وتغذية راجعة فورية!</div>
+      <div class="tags">
+        <span class="tag tag-amber">📚 الصف الرابع</span>
+        <span class="tag tag-red">❓ اختبار</span>
+        <span class="tag tag-amber">🌟 تفاعلي</span>
+      </div>
+      <button class="play-btn btn-2">▶ العب الآن</button>
+    </a>
+
+  </div>
+
+  <p class="footer">ألعاب تعليمية تفاعلية • مصممة بحب 💜</p>
+</div>
+</body>
+</html>
